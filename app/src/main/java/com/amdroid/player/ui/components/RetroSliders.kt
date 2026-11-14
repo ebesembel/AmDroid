@@ -115,7 +115,7 @@ fun RetroVerticalSlider(
 
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterVertically
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Frequency label at top
         Text(

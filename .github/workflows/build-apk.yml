@@ -21,6 +21,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Android SDK & Licenses
+        uses: android-actions/setup-android@v4
+        with:
+          accept-android-sdk-licenses: true
 
       - name: Set up Gradle Build Tool
         uses: gradle/actions/setup-gradle@v3

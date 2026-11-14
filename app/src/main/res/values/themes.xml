@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AmDroid" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#18191B</item>
+        <item name="android:navigationBarColor">#18191B</item>
+        <item name="android:windowBackground">#18191B</item>
+    </style>
+</resources>

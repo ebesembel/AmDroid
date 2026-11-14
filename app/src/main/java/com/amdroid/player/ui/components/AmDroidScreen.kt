@@ -1,0 +1,148 @@
+package com.amdroid.player.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.amdroid.player.audio.VisualizerMode
+import com.amdroid.player.service.AudioPlaybackService
+import com.amdroid.player.ui.theme.WinampMetalDark
+
+@Composable
+fun AmDroidScreen(
+    service: AudioPlaybackService?,
+    onOpenAudioPicker: () -> Unit
+) {
+    if (service == null) return
+
+    val playlist by service.playlist.collectAsState()
+    val currentIdx by service.currentTrackIndex.collectAsState()
+    val isPlaying by service.isPlaying.collectAsState()
+    val currentPosMs by service.currentPositionMs.collectAsState()
+    val isShuffle by service.isShuffle.collectAsState()
+    val isRepeat by service.isRepeat.collectAsState()
+
+    var showEqualizer by remember { mutableStateOf(true) }
+    var showPlaylist by remember { mutableStateOf(true) }
+
+    var masterVolume by remember { mutableFloatStateOf(1.0f) }
+    var panBalance by remember { mutableFloatStateOf(0.0f) }
+
+    var visualizerMode by remember { mutableStateOf(VisualizerMode.SPECTRUM) }
+
+    // Equalizer state triggers
+    var eqEnabled by remember { mutableStateOf(service.equalizerManager.isEnabled) }
+    var preampDb by remember { mutableFloatStateOf(service.equalizerManager.preampGainDb) }
+    var eqRecomposeKey by remember { mutableIntStateOf(0) }
+
+    val currentTrack = if (currentIdx in playlist.indices) playlist[currentIdx] else null
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(WinampMetalDark)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // 1. Classic Main Player Window
+            MainWindow(
+                currentTrack = currentTrack,
+                isPlaying = isPlaying,
+                currentPosMs = currentPosMs,
+                visualizerMode = visualizerMode,
+                bars = service.visualizerManager.barValues,
+                peaks = service.visualizerManager.peakValues,
+                waves = service.visualizerManager.wavePoints,
+                volume = masterVolume,
+                balance = panBalance,
+                isShuffle = isShuffle,
+                isRepeat = isRepeat,
+                showEqualizer = showEqualizer,
+                showPlaylist = showPlaylist,
+                onPlayPause = { service.togglePlayPause() },
+                onStop = { service.stop() },
+                onNext = { service.next() },
+                onPrev = { service.previous() },
+                onSeek = { frac ->
+                    currentTrack?.let {
+                        val targetMs = (it.durationMs * frac).toLong()
+                        service.seekTo(targetMs)
+                    }
+                },
+                onVolumeChange = { vol ->
+                    masterVolume = vol
+                    service.setVolume(vol)
+                },
+                onBalanceChange = { bal ->
+                    panBalance = bal
+                    service.setBalance(bal)
+                },
+                onToggleVisualizer = {
+                    visualizerMode = when (visualizerMode) {
+                        VisualizerMode.SPECTRUM -> VisualizerMode.OSCILLOSCOPE
+                        VisualizerMode.OSCILLOSCOPE -> VisualizerMode.OFF
+                        VisualizerMode.OFF -> VisualizerMode.SPECTRUM
+                    }
+                    service.visualizerManager.mode = visualizerMode
+                },
+                onToggleShuffle = { service.toggleShuffle() },
+                onToggleRepeat = { service.toggleRepeat() },
+                onToggleEqualizer = { showEqualizer = !showEqualizer },
+                onTogglePlaylist = { showPlaylist = !showPlaylist },
+                onOpenAudioPicker = onOpenAudioPicker
+            )
+
+            // 2. Graphic Equalizer Window (Toggleable)
+            if (showEqualizer) {
+                key(eqRecomposeKey) {
+                    EqualizerWindow(
+                        eqManager = service.equalizerManager,
+                        isEqEnabled = eqEnabled,
+                        preampDb = preampDb,
+                        bandLevels = service.equalizerManager.bandLevels,
+                        onToggleEq = { enabled ->
+                            eqEnabled = enabled
+                            service.equalizerManager.setEnabled(enabled)
+                            eqRecomposeKey++
+                        },
+                        onPreampChange = { db ->
+                            preampDb = db
+                            service.equalizerManager.setPreamp(db)
+                            eqRecomposeKey++
+                        },
+                        onBandChange = { band, db ->
+                            service.equalizerManager.setBandLevel(band, db)
+                            eqRecomposeKey++
+                        },
+                        onApplyPreset = { preset ->
+                            service.equalizerManager.applyPreset(preset)
+                            preampDb = service.equalizerManager.preampGainDb
+                            eqRecomposeKey++
+                        }
+                    )
+                }
+            }
+
+            // 3. Playlist Window (Toggleable)
+            if (showPlaylist) {
+                PlaylistWindow(
+                    tracks = playlist,
+                    currentTrackIndex = currentIdx,
+                    onTrackSelected = { idx -> service.playTrack(idx) },
+                    onAddAudioClick = onOpenAudioPicker,
+                    onClearPlaylist = { service.setPlaylist(emptyList()) }
+                )
+            }
+        }
+    }
+}

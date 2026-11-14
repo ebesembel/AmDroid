@@ -1,0 +1,11 @@
+<resources>
+    <color name="winamp_bg">#232426</color>
+    <color name="winamp_panel">#2E3033</color>
+    <color name="winamp_metal_light">#4A4C50</color>
+    <color name="winamp_metal_dark">#18191B</color>
+    <color name="winamp_lcd_bg">#001100</color>
+    <color name="winamp_lcd_green">#00FF00</color>
+    <color name="winamp_lcd_dim">#004400</color>
+    <color name="winamp_lcd_orange">#FF8800</color>
+    <color name="winamp_accent_blue">#0000AA</color>
+</resources>

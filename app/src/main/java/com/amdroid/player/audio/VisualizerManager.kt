@@ -26,7 +26,7 @@ class VisualizerManager {
         release()
         try {
             visualizer = Visualizer(audioSessionId).apply {
-                captureSize = Visualizer.getCaptureSizeRange()[0].coerceAtLeast(128)
+                setCaptureSize(Visualizer.getCaptureSizeRange()[0].coerceAtLeast(128))
                 setDataCaptureListener(object : Visualizer.OnDataCaptureListener {
                     override fun onWaveFormDataCapture(
                         v: Visualizer?,
@@ -44,7 +44,7 @@ class VisualizerManager {
                         fft?.let { processFft(it) }
                     }
                 }, Visualizer.getMaxCaptureRate() / 2, true, true)
-                enabled = true
+                setEnabled(true)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -129,7 +129,7 @@ class VisualizerManager {
 
     fun release() {
         try {
-            visualizer?.enabled = false
+            visualizer?.setEnabled(false)
             visualizer?.release()
         } catch (e: Exception) {
             e.printStackTrace()

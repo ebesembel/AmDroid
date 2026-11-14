@@ -40,7 +40,7 @@ class EqualizerManager {
         release()
         try {
             equalizer = Equalizer(0, audioSessionId).apply {
-                enabled = isEnabled
+                setEnabled(isEnabled)
             }
             applyAllBands()
         } catch (e: Exception) {
@@ -50,7 +50,11 @@ class EqualizerManager {
 
     fun setEnabled(enabled: Boolean) {
         isEnabled = enabled
-        equalizer?.enabled = enabled
+        try {
+            equalizer?.setEnabled(enabled)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun setPreamp(db: Float) {

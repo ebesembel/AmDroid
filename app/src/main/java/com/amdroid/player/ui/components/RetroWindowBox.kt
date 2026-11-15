@@ -27,41 +27,70 @@ fun RetroWindowBox(
     onToggleCollapse: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    // High-Tech Cyber Studio Border Gradient (Cyan Neon -> Electric Blue -> Deep Gunmetal)
+    val laserBorderGradient = Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF00F0FF), // Cyan Neón brillante
+            Color(0xFF0284C7), // Azul Eléctrico
+            Color(0xFF1E293B), // Titanio Oscuro
+            Color(0xFF0284C7),
+            Color(0xFF00F0FF)
+        )
+    )
+
+    val chassisBackground = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF161C27), // Titanio cepillado superior
+            Color(0xFF0E121A)  // Obsidiana profunda base
+        )
+    )
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(6.dp, RoundedCornerShape(4.dp))
-            .background(AmDroidMetalMid, RoundedCornerShape(4.dp))
-            .border(1.dp, AmDroidBorderHighlight, RoundedCornerShape(4.dp))
-            .padding(5.dp)
+            // Ambient Neon Cyan Underglow
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(8.dp),
+                spotColor = Color(0x6600F0FF),
+                ambientColor = Color(0x330284C7)
+            )
+            .background(chassisBackground, RoundedCornerShape(8.dp))
+            // Striking High-Tech Border
+            .border(1.5.dp, laserBorderGradient, RoundedCornerShape(8.dp))
+            .padding(6.dp)
     ) {
-        // Modernized Title Bar with Cyan & Blue Accents
+        // Modern Studio Rackmount Title Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     Brush.horizontalGradient(
-                        colors = listOf(AmDroidMetalDark, AmDroidMetalLight, AmDroidMetalDark)
+                        colors = listOf(
+                            Color(0xFF0B0F17),
+                            Color(0xFF1C2433),
+                            Color(0xFF0B0F17)
+                        )
                     ),
-                    RoundedCornerShape(2.dp)
+                    RoundedCornerShape(4.dp)
                 )
-                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(2.dp))
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .border(1.dp, Color(0xFF283548), RoundedCornerShape(4.dp))
+                .padding(horizontal = 8.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Mini Electric Lightning Bolt Accent
-                Text(
-                    text = "⚡",
-                    color = AmDroidCyanGlow,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Black
-                )
-                Spacer(modifier = Modifier.width(5.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                // Nuevo Logo Oficial E ⚡ B (Vectorial en azul eléctrico, CERO emojis anaranjados)
+                AmDroidLogoBadge(height = 16)
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text(
                     text = title.uppercase(),
-                    color = AmDroidCyanGlow,
+                    color = AmDroidCyanBright,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
@@ -72,23 +101,31 @@ fun RetroWindowBox(
             if (isCollapsible) {
                 Box(
                     modifier = Modifier
-                        .size(16.dp)
-                        .background(AmDroidButtonFace, RoundedCornerShape(2.dp))
-                        .border(1.dp, AmDroidBorderHighlight, RoundedCornerShape(2.dp))
+                        .size(18.dp)
+                        .background(Color(0xFF1A2230), RoundedCornerShape(3.dp))
+                        .border(1.dp, Color(0xFF00F0FF), RoundedCornerShape(3.dp))
                         .clickable { onToggleCollapse?.invoke() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = if (isCollapsed) "+" else "−",
                         color = Color.White,
-                        fontSize = 10.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
+            } else {
+                // Indicador de Estado LED Cyan
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(Color(0xFF00F0FF), RoundedCornerShape(4.dp))
+                        .shadow(4.dp, RoundedCornerShape(4.dp), spotColor = Color(0xFF00F0FF))
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(5.dp))
 
         if (!isCollapsed) {
             content()

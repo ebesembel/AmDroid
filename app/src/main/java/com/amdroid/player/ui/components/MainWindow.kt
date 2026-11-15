@@ -39,7 +39,7 @@ fun MainWindow(
     modifier: Modifier = Modifier
 ) {
     RetroWindowBox(
-        title = "AmDroid v1.1 - Ventana Principal",
+        title = "AmDroid Pro - Ventana Principal",
         modifier = modifier
     ) {
         // 1. Pantalla LCD Retro

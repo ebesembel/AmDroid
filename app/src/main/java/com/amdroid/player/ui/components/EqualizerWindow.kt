@@ -81,8 +81,8 @@ fun EqualizerWindow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(WinampMetalDark, RoundedCornerShape(2.dp))
-                .border(1.dp, WinampBorderShadow)
+                .background(Color(0xFF080B11), RoundedCornerShape(4.dp))
+                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(4.dp))
                 .padding(vertical = 6.dp, horizontal = 4.dp)
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -102,7 +102,7 @@ fun EqualizerWindow(
                 modifier = Modifier
                     .width(2.dp)
                     .height(130.dp)
-                    .background(WinampBorderHighlight)
+                    .background(Color(0xFF0284C7))
             )
 
             // 10 Frequency Sliders

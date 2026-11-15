@@ -41,21 +41,6 @@ fun AmDroidScreen(
 
     val currentTrack = if (currentIdx in playlist.indices) playlist[currentIdx] else null
 
-    // Sorted playlist based on currentSortMode
-    val displayedTracks = remember(playlist, currentSortMode) {
-        when (currentSortMode) {
-            PlaylistSortMode.FOLDER -> playlist.sortedWith(
-                compareBy<com.amdroid.player.model.Track> { it.folderName.lowercase() }
-                    .thenBy { it.title.lowercase() }
-            )
-            PlaylistSortMode.ALBUM -> playlist.sortedWith(
-                compareBy<com.amdroid.player.model.Track> { it.album.lowercase() }
-                    .thenBy { it.title.lowercase() }
-            )
-            PlaylistSortMode.DEFAULT -> playlist
-        }
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -149,33 +134,14 @@ fun AmDroidScreen(
                 }
             }
 
-            // 3. Playlist Window (Toggleable with Sorting Modes)
+            // 3. Playlist Window (Toggleable with Collapsible Folders/Albums)
             if (showPlaylist) {
-                // Find index of currently playing song in displayed list
-                val displayedCurrentIdx = if (currentTrack != null) {
-                    displayedTracks.indexOfFirst { it.id == currentTrack.id }
-                } else -1
-
                 PlaylistWindow(
-                    tracks = displayedTracks,
-                    currentTrackIndex = displayedCurrentIdx,
+                    tracks = playlist,
+                    currentTrackIndex = currentIdx,
                     currentSortMode = currentSortMode,
                     onSortModeChanged = { mode ->
                         currentSortMode = mode
-                        if (mode != PlaylistSortMode.DEFAULT) {
-                            val newSorted = when (mode) {
-                                PlaylistSortMode.FOLDER -> playlist.sortedWith(
-                                    compareBy<com.amdroid.player.model.Track> { it.folderName.lowercase() }
-                                        .thenBy { it.title.lowercase() }
-                                )
-                                PlaylistSortMode.ALBUM -> playlist.sortedWith(
-                                    compareBy<com.amdroid.player.model.Track> { it.album.lowercase() }
-                                        .thenBy { it.title.lowercase() }
-                                )
-                                else -> playlist
-                            }
-                            service.setPlaylist(newSorted, startIdx = if (currentTrack != null) newSorted.indexOfFirst { it.id == currentTrack.id }.coerceAtLeast(0) else 0)
-                        }
                     },
                     onShuffleOrder = {
                         val shuffled = playlist.shuffled()
@@ -183,14 +149,8 @@ fun AmDroidScreen(
                         service.setPlaylist(shuffled, startIdx = newIdx)
                     },
                     onTrackSelected = { selectedIdx ->
-                        if (selectedIdx in displayedTracks.indices) {
-                            val targetTrack = displayedTracks[selectedIdx]
-                            val originalIdx = playlist.indexOfFirst { it.id == targetTrack.id }
-                            if (originalIdx >= 0) {
-                                service.playTrack(originalIdx)
-                            } else {
-                                service.playTrack(selectedIdx)
-                            }
+                        if (selectedIdx in playlist.indices) {
+                            service.playTrack(selectedIdx)
                         }
                     },
                     onAddAudioClick = onOpenAudioPicker,

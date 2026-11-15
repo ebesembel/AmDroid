@@ -1,10 +1,14 @@
 package com.amdroid.player.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -38,11 +42,32 @@ fun PlaylistWindow(
     currentSortMode: PlaylistSortMode = PlaylistSortMode.DEFAULT,
     modifier: Modifier = Modifier
 ) {
+    // Current playing track's folder and album
+    val activeTrack = if (currentTrackIndex in tracks.indices) tracks[currentTrackIndex] else null
+    val activeFolderName = activeTrack?.folderName
+    val activeAlbumName = activeTrack?.album
+
+    // State for expanded folders (only the active one expanded by default)
+    var expandedFolders by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var expandedAlbums by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    // Sync expanded folder whenever active track or sort mode changes
+    LaunchedEffect(activeFolderName, currentSortMode) {
+        if (activeFolderName != null) {
+            expandedFolders = setOf(activeFolderName)
+        }
+    }
+    LaunchedEffect(activeAlbumName, currentSortMode) {
+        if (activeAlbumName != null) {
+            expandedAlbums = setOf(activeAlbumName)
+        }
+    }
+
     RetroWindowBox(
         title = "AmDroid - Lista de Reproducción",
         modifier = modifier
     ) {
-        // Barra de Ordenamiento (Carpetas, Álbum, Nombre, Mezclar)
+        // Barra de Ordenamiento (Carpetas, Álbum, Título, Mezclar)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -53,23 +78,18 @@ fun PlaylistWindow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                // Filtro por Nombre
                 SortPill(
                     label = "TITULO",
                     icon = "📋",
                     isSelected = currentSortMode == PlaylistSortMode.DEFAULT,
                     onClick = { onSortModeChanged(PlaylistSortMode.DEFAULT) }
                 )
-
-                // Filtro por Carpeta
                 SortPill(
                     label = "CARPETAS",
                     icon = "📁",
                     isSelected = currentSortMode == PlaylistSortMode.FOLDER,
                     onClick = { onSortModeChanged(PlaylistSortMode.FOLDER) }
                 )
-
-                // Filtro por Álbum
                 SortPill(
                     label = "ÁLBUM",
                     icon = "💿",
@@ -78,7 +98,7 @@ fun PlaylistWindow(
                 )
             }
 
-            // Botón rápido para Mezclar el orden aleatoriamente
+            // Botón Mezclar
             Box(
                 modifier = Modifier
                     .background(AmDroidButtonFace, RoundedCornerShape(2.dp))
@@ -99,11 +119,11 @@ fun PlaylistWindow(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Ventana de canciones
+        // Ventana de canciones / carpetas
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(220.dp)
+                .height(230.dp)
                 .background(AmDroidPlaylistBg, RoundedCornerShape(2.dp))
                 .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(2.dp))
                 .padding(2.dp)
@@ -122,79 +142,268 @@ fun PlaylistWindow(
                     )
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    var lastHeader = ""
+                when (currentSortMode) {
+                    // MODO CARPETAS PLEGABLES (Solo expandida la que se está reproduciendo)
+                    PlaylistSortMode.FOLDER -> {
+                        val folderGroups = remember(tracks) { tracks.groupBy { it.folderName } }
 
-                    itemsIndexed(tracks) { index, track ->
-                        val isSelected = index == currentTrackIndex
-                        val rowBg = if (isSelected) AmDroidPlaylistSelected else Color.Transparent
-                        val textColor = if (isSelected) Color.White else Color(0xFFE2E8F0)
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            folderGroups.forEach { (folderName, folderTracks) ->
+                                val isExpanded = folderName in expandedFolders
+                                val isCurrentFolder = folderName == activeFolderName
 
-                        // Si estamos ordenando por carpeta o álbum, mostramos cabecera divisoria
-                        val currentHeader = when (currentSortMode) {
-                            PlaylistSortMode.FOLDER -> "📁 CARPETA: ${track.folderName}"
-                            PlaylistSortMode.ALBUM -> "💿 ÁLBUM: ${track.album}"
-                            PlaylistSortMode.DEFAULT -> ""
-                        }
+                                item(key = "folder_$folderName") {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(if (isCurrentFolder) Color(0xFF16253B) else Color(0xFF111722))
+                                            .border(1.dp, if (isCurrentFolder) AmDroidCyanGlow else Color(0xFF1E293B))
+                                            .clickable {
+                                                expandedFolders = if (isExpanded) {
+                                                    expandedFolders - folderName
+                                                } else {
+                                                    expandedFolders + folderName
+                                                }
+                                            }
+                                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                text = if (isExpanded) "▼" else "▶",
+                                                color = if (isCurrentFolder) AmDroidCyanBright else Color.White,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "📁 $folderName",
+                                                color = if (isCurrentFolder) AmDroidCyanBright else Color(0xFFE2E8F0),
+                                                fontSize = 12.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "(${folderTracks.size})",
+                                                color = AmDroidTextMuted,
+                                                fontSize = 10.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                        }
 
-                        if (currentHeader.isNotEmpty() && currentHeader != lastHeader) {
-                            lastHeader = currentHeader
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(Color(0xFF131A26))
-                                    .padding(horizontal = 6.dp, vertical = 3.dp)
-                            ) {
-                                Text(
-                                    text = currentHeader.uppercase(),
-                                    color = AmDroidCyanGlow,
-                                    fontSize = 10.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                        if (isCurrentFolder) {
+                                            Text(
+                                                text = "SONANDO",
+                                                color = AmDroidCyanBright,
+                                                fontSize = 8.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (isExpanded) {
+                                    items(folderTracks) { track ->
+                                        val overallIndex = tracks.indexOf(track)
+                                        val isSelected = overallIndex == currentTrackIndex
+                                        val rowBg = if (isSelected) AmDroidPlaylistSelected else Color.Transparent
+                                        val textColor = if (isSelected) Color.White else Color(0xFFE2E8F0)
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(rowBg)
+                                                .clickable { onTrackSelected(overallIndex) }
+                                                .padding(start = 24.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "${track.artist} - ${track.title}",
+                                                color = textColor,
+                                                fontSize = 11.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = track.formattedDuration,
+                                                color = if (isSelected) Color.White else AmDroidLcdDimCyan,
+                                                fontSize = 11.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
+                    }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(rowBg)
-                                .clickable { onTrackSelected(index) }
-                                .padding(horizontal = 6.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "${index + 1}. ${track.artist} - ${track.title}",
-                                    color = textColor,
-                                    fontSize = 12.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                    // MODO ÁLBUM PLEGABLE (Solo expandido el álbum en reproducción)
+                    PlaylistSortMode.ALBUM -> {
+                        val albumGroups = remember(tracks) { tracks.groupBy { it.album.ifBlank { "Sin Álbum" } } }
 
-                                if (currentSortMode == PlaylistSortMode.DEFAULT && track.album.isNotBlank()) {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            albumGroups.forEach { (albumName, albumTracks) ->
+                                val isExpanded = albumName in expandedAlbums
+                                val isCurrentAlbum = albumName == (activeAlbumName?.ifBlank { "Sin Álbum" })
+
+                                item(key = "album_$albumName") {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(if (isCurrentAlbum) Color(0xFF16253B) else Color(0xFF111722))
+                                            .border(1.dp, if (isCurrentAlbum) AmDroidCyanGlow else Color(0xFF1E293B))
+                                            .clickable {
+                                                expandedAlbums = if (isExpanded) {
+                                                    expandedAlbums - albumName
+                                                } else {
+                                                    expandedAlbums + albumName
+                                                }
+                                            }
+                                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text(
+                                                text = if (isExpanded) "▼" else "▶",
+                                                color = if (isCurrentAlbum) AmDroidCyanBright else Color.White,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "💿 $albumName",
+                                                color = if (isCurrentAlbum) AmDroidCyanBright else Color(0xFFE2E8F0),
+                                                fontSize = 12.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "(${albumTracks.size})",
+                                                color = AmDroidTextMuted,
+                                                fontSize = 10.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                        }
+
+                                        if (isCurrentAlbum) {
+                                            Text(
+                                                text = "SONANDO",
+                                                color = AmDroidCyanBright,
+                                                fontSize = 8.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (isExpanded) {
+                                    items(albumTracks) { track ->
+                                        val overallIndex = tracks.indexOf(track)
+                                        val isSelected = overallIndex == currentTrackIndex
+                                        val rowBg = if (isSelected) AmDroidPlaylistSelected else Color.Transparent
+                                        val textColor = if (isSelected) Color.White else Color(0xFFE2E8F0)
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(rowBg)
+                                                .clickable { onTrackSelected(overallIndex) }
+                                                .padding(start = 24.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "${track.artist} - ${track.title}",
+                                                color = textColor,
+                                                fontSize = 11.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = track.formattedDuration,
+                                                color = if (isSelected) Color.White else AmDroidLcdDimCyan,
+                                                fontSize = 11.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // MODO LISTA COMPLETA POR TÍTULO
+                    PlaylistSortMode.DEFAULT -> {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            itemsIndexed(tracks) { index, track ->
+                                val isSelected = index == currentTrackIndex
+                                val rowBg = if (isSelected) AmDroidPlaylistSelected else Color.Transparent
+                                val textColor = if (isSelected) Color.White else Color(0xFFE2E8F0)
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(rowBg)
+                                        .clickable { onTrackSelected(index) }
+                                        .padding(horizontal = 6.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "${index + 1}. ${track.artist} - ${track.title}",
+                                            color = textColor,
+                                            fontSize = 12.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = "📁 ${track.folderName} • 💿 ${track.album}",
+                                            color = if (isSelected) Color(0xFFE0F2FE) else AmDroidPlaylistTextMuted,
+                                            fontSize = 9.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
                                     Text(
-                                        text = "${track.album} • ${track.folderName}",
-                                        color = if (isSelected) Color(0xFFE0F2FE) else AmDroidPlaylistTextMuted,
-                                        fontSize = 9.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        text = track.formattedDuration,
+                                        color = if (isSelected) Color.White else AmDroidLcdDimCyan,
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace
                                     )
                                 }
                             }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Text(
-                                text = track.formattedDuration,
-                                color = if (isSelected) Color.White else AmDroidLcdDimCyan,
-                                fontSize = 11.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
                         }
                     }
                 }

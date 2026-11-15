@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- E on left -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3,6h5v2H5v2h3v2H5v2h5v2H3V6z"/>
+    <!-- Thin Lightning bolt in center -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12.5,4L9.5,11h3l-1.5,8 4.5,-9h-3.5z"/>
+    <!-- B on right -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M15,6h4c1,0 1.5,0.5 1.5,1.5 0,0.7 -0.5,1.2 -1.1,1.4 0.8,0.2 1.3,0.8 1.3,1.6 0,1 -0.5,1.5 -1.7,1.5h-4V6zm2,2v1.5h1.8c0.4,0 0.7,-0.2 0.7,-0.7 0,-0.5 -0.3,-0.8 -0.7,-0.8H17zm0,3.2V13h2c0.5,0 0.8,-0.3 0.8,-0.8 0,-0.6 -0.3,-0.9 -0.8,-0.9H17z"/>
+</vector>

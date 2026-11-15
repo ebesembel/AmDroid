@@ -12,13 +12,16 @@ import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import com.amdroid.player.MainActivity
 import com.amdroid.player.R
 import com.amdroid.player.audio.EqualizerManager
 import com.amdroid.player.audio.VisualizerManager
 import com.amdroid.player.model.Track
+import com.amdroid.player.util.LogoBitmapHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -69,15 +72,31 @@ class AudioPlaybackService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        setupMediaSession()
+        createNotificationChannel()
+        startTicker()
+    }
+
+    private fun setupMediaSession() {
         try {
             mediaSession = MediaSessionCompat(this, "AmDroidSession").apply {
+                setFlags(
+                    MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
+                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+                )
+                setCallback(object : MediaSessionCompat.Callback() {
+                    override fun onPlay() { togglePlayPause() }
+                    override fun onPause() { togglePlayPause() }
+                    override fun onSkipToNext() { next() }
+                    override fun onSkipToPrevious() { previous() }
+                    override fun onStop() { stopAndExit() }
+                    override fun onSeekTo(pos: Long) { seekTo(pos) }
+                })
                 isActive = true
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        createNotificationChannel()
-        startTicker()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -87,7 +106,7 @@ class AudioPlaybackService : Service() {
             ACTION_NEXT -> next()
             ACTION_CLOSE -> stopAndExit()
         }
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     private fun startTicker() {
@@ -180,6 +199,10 @@ class AudioPlaybackService : Service() {
             _isPlaying.value = false
             _currentPositionMs.value = 0L
         }
+        val currentIdx = _currentTrackIndex.value
+        if (currentIdx in _playlist.value.indices) {
+            updateForegroundNotification(_playlist.value[currentIdx])
+        }
     }
 
     fun next() {
@@ -242,6 +265,7 @@ class AudioPlaybackService : Service() {
     }
 
     fun stopAndExit() {
+        _isPlaying.value = false
         stop()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -307,6 +331,35 @@ class AudioPlaybackService : Service() {
         val playPauseIcon = if (_isPlaying.value) R.drawable.ic_notif_pause else R.drawable.ic_notif_play
         val playPauseTitle = if (_isPlaying.value) "Pausa" else "Reproducir"
 
+        // Generate the new official E ⚡ B logo bitmap
+        val logoBitmap = LogoBitmapHelper.getLogoBitmap()
+
+        // Update MediaSession PlaybackState and Metadata (Crucial for Android 11-14 Quick Settings Shade)
+        val stateInt = if (_isPlaying.value) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED
+        val playbackState = PlaybackStateCompat.Builder()
+            .setActions(
+                PlaybackStateCompat.ACTION_PLAY or
+                PlaybackStateCompat.ACTION_PAUSE or
+                PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                PlaybackStateCompat.ACTION_STOP or
+                PlaybackStateCompat.ACTION_SEEK_TO
+            )
+            .setState(stateInt, _currentPositionMs.value, 1.0f)
+            .build()
+        mediaSession?.setPlaybackState(playbackState)
+
+        val metadata = MediaMetadataCompat.Builder()
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, track.title)
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, track.artist)
+            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, track.album)
+            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, track.durationMs)
+            .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, logoBitmap)
+            .putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, logoBitmap)
+            .build()
+        mediaSession?.setMetadata(metadata)
+
         val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
             .setShowActionsInCompactView(0, 1, 2)
         mediaSession?.let {
@@ -314,12 +367,13 @@ class AudioPlaybackService : Service() {
         }
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.ic_stat_eb_logo) // Official E ⚡ B silhouette
+            .setLargeIcon(logoBitmap)                 // Official Full Color E ⚡ B Logo in Notification shade
             .setContentTitle(track.title)
             .setContentText("${track.artist} • AmDroid")
-            .setSubText("AmDroid")
+            .setSubText("AmDroid Reproductor")
             .setContentIntent(pendingIntent)
-            .setOngoing(_isPlaying.value)
+            .setOngoing(true)                         // Keep ongoing so it NEVER disappears unless closed via '✕'
             .setSilent(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .addAction(R.drawable.ic_notif_prev, "Anterior", prevIntent)

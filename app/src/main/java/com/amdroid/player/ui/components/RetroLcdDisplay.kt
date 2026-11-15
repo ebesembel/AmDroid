@@ -64,8 +64,8 @@ fun RetroLcdDisplay(
         modifier = modifier
             .fillMaxWidth()
             .height(72.dp)
-            .background(WinampLcdBackground, RoundedCornerShape(2.dp))
-            .border(1.dp, WinampBorderShadow)
+            .background(AmDroidLcdBg, RoundedCornerShape(3.dp))
+            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(3.dp))
             .padding(horizontal = 8.dp, vertical = 5.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
@@ -76,14 +76,14 @@ fun RetroLcdDisplay(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Digital 7-segment style counter
+                // Digital 7-segment style counter in Electric Cyan
                 Row(
                     modifier = Modifier.clickable { showRemainingTime = !showRemainingTime },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = displayTime,
-                        color = WinampLcdGreen,
+                        color = AmDroidCyanBright,
                         fontSize = 26.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Black,
@@ -92,7 +92,7 @@ fun RetroLcdDisplay(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = if (showRemainingTime) "REST" else "TRAN",
-                        color = WinampLcdDimGreen,
+                        color = AmDroidLcdDimCyan,
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
@@ -104,14 +104,14 @@ fun RetroLcdDisplay(
                     Row {
                         Text(
                             text = "$bitrateKbps",
-                            color = WinampLcdGreen,
+                            color = AmDroidCyanGlow,
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = " kbps",
-                            color = WinampLcdDimGreen,
+                            color = AmDroidLcdDimCyan,
                             fontSize = 9.sp,
                             fontFamily = FontFamily.Monospace
                         )
@@ -119,14 +119,14 @@ fun RetroLcdDisplay(
                     Row {
                         Text(
                             text = "$sampleRateKhz",
-                            color = WinampLcdGreen,
+                            color = AmDroidCyanGlow,
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = " kHz",
-                            color = WinampLcdDimGreen,
+                            color = AmDroidLcdDimCyan,
                             fontSize = 9.sp,
                             fontFamily = FontFamily.Monospace
                         )
@@ -147,7 +147,7 @@ fun RetroLcdDisplay(
                 ) {
                     Text(
                         text = if (trackTitle.isBlank()) "AmDroid - Listo para sonar" else trackTitle,
-                        color = WinampLcdGreen,
+                        color = Color(0xFFE2E8F0),
                         fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
@@ -162,15 +162,15 @@ fun RetroLcdDisplay(
                 Row {
                     Text(
                         text = "MONO",
-                        color = WinampLcdDimGreen,
+                        color = AmDroidLcdDimCyan,
                         fontSize = 8.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.width(3.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "ESTÉREO",
-                        color = if (isPlaying) WinampLcdOrange else WinampLcdDimGreen,
+                        color = if (isPlaying) AmDroidCyanBright else AmDroidLcdDimCyan,
                         fontSize = 8.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold

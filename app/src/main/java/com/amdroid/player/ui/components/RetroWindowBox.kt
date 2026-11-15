@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -29,50 +30,65 @@ fun RetroWindowBox(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(2.dp))
-            .background(WinampMetalMid, RoundedCornerShape(2.dp))
-            .border(2.dp, WinampBorderHighlight)
-            .border(1.dp, WinampBorderShadow)
-            .padding(4.dp)
+            .shadow(6.dp, RoundedCornerShape(4.dp))
+            .background(AmDroidMetalMid, RoundedCornerShape(4.dp))
+            .border(1.dp, AmDroidBorderHighlight, RoundedCornerShape(4.dp))
+            .padding(5.dp)
     ) {
-        // Classic Title Bar
+        // Modernized Title Bar with Cyan & Blue Accents
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(WinampMetalDark)
-                .padding(horizontal = 6.dp, vertical = 3.dp),
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(AmDroidMetalDark, AmDroidMetalLight, AmDroidMetalDark)
+                    ),
+                    RoundedCornerShape(2.dp)
+                )
+                .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(2.dp))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = title.uppercase(),
-                color = WinampLcdGreen,
-                fontSize = 10.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Mini Electric Lightning Bolt Accent
+                Text(
+                    text = "⚡",
+                    color = AmDroidCyanGlow,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Black
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(
+                    text = title.uppercase(),
+                    color = AmDroidCyanGlow,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
 
             if (isCollapsible) {
                 Box(
                     modifier = Modifier
-                        .size(14.dp)
-                        .background(WinampButtonFace)
-                        .border(1.dp, WinampBorderHighlight)
+                        .size(16.dp)
+                        .background(AmDroidButtonFace, RoundedCornerShape(2.dp))
+                        .border(1.dp, AmDroidBorderHighlight, RoundedCornerShape(2.dp))
                         .clickable { onToggleCollapse?.invoke() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (isCollapsed) "+" else "_",
+                        text = if (isCollapsed) "+" else "−",
                         color = Color.White,
-                        fontSize = 9.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         if (!isCollapsed) {
             content()

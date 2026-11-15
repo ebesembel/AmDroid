@@ -5,14 +5,14 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
 private val DarkColorScheme = darkColorScheme(
-    primary = WinampLcdGreen,
-    secondary = WinampLcdOrange,
-    background = WinampMetalDark,
-    surface = WinampMetalMid,
-    onPrimary = WinampMetalDark,
-    onSecondary = WinampMetalDark,
-    onBackground = WinampLcdGreen,
-    onSurface = WinampLcdGreen
+    primary = AmDroidCyanGlow,
+    secondary = AmDroidBlueElectric,
+    background = AmDroidMetalDark,
+    surface = AmDroidMetalMid,
+    onPrimary = AmDroidMetalDark,
+    onSecondary = AmDroidTextBright,
+    onBackground = AmDroidCyanGlow,
+    onSurface = AmDroidTextBright
 )
 
 @Composable

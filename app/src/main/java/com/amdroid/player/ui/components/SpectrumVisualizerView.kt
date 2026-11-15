@@ -31,19 +31,19 @@ fun SpectrumVisualizerView(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(50.dp)
-            .background(WinampLcdBackground, RoundedCornerShape(2.dp))
-            .border(1.dp, WinampBorderShadow)
+            .height(56.dp)
+            .background(AmDroidLcdBg, RoundedCornerShape(3.dp))
+            .border(1.dp, Color(0xFF1E293B), RoundedCornerShape(3.dp))
             .clickable { onToggleMode() }
     ) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(50.dp)) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(56.dp)) {
             val canvasW = size.width
             val canvasH = size.height
 
             when (mode) {
                 VisualizerMode.SPECTRUM -> {
                     val barCount = bars.size
-                    val spacing = 2.dp.toPx()
+                    val spacing = 2.5.dp.toPx()
                     val totalSpacing = spacing * (barCount + 1)
                     val barW = (canvasW - totalSpacing) / barCount
 
@@ -52,19 +52,19 @@ fun SpectrumVisualizerView(
                         val peakH = (peaks[i] * canvasH).coerceIn(0f, canvasH)
 
                         val left = spacing + i * (barW + spacing)
-                        val top = canvasH - barH
 
-                        // Draw segmented colored bar (Winamp Green -> Yellow -> Red)
-                        val segments = 12
+                        // Segmented LED look (14 segments)
+                        val segments = 14
                         val segmentHeight = canvasH / segments
                         val activeSegments = (barH / segmentHeight).toInt()
 
                         for (s in 0 until activeSegments) {
                             val segTop = canvasH - (s + 1) * segmentHeight
                             val segColor = when {
-                                s > 9 -> Color(0xFFFF2200) // Red high peak
-                                s > 6 -> Color(0xFFFFDD00) // Yellow mid peak
-                                else -> Color(0xFF00FF00)  // Green base
+                                s > 11 -> Color(0xFFFFFFFF) // White hot top peak
+                                s > 8 -> Color(0xFF7DD3FC)  // Ice Cyan
+                                s > 4 -> Color(0xFF38BDF8)  // Electric Cyan
+                                else -> Color(0xFF0284C7)   // Deep Electric Blue
                             }
 
                             drawRect(
@@ -74,13 +74,13 @@ fun SpectrumVisualizerView(
                             )
                         }
 
-                        // Draw Peak falling dot
+                        // Peak falling hold line
                         if (peakH > 2f) {
                             val peakTop = (canvasH - peakH).coerceIn(0f, canvasH - 3f)
                             drawRect(
                                 color = Color(0xFFFFFFFF),
                                 topLeft = Offset(left, peakTop),
-                                size = Size(barW, 2f)
+                                size = Size(barW, 2.5f)
                             )
                         }
                     }
@@ -102,16 +102,24 @@ fun SpectrumVisualizerView(
                             }
                         }
 
+                        // Background subtle glow stroke
                         drawPath(
                             path = path,
-                            color = WinampLcdGreen,
+                            color = Color(0x3338BDF8),
+                            style = Stroke(width = 5.dp.toPx())
+                        )
+
+                        // Foreground sharp neon stroke
+                        drawPath(
+                            path = path,
+                            color = AmDroidCyanBright,
                             style = Stroke(width = 2.dp.toPx())
                         )
                     }
                 }
 
                 VisualizerMode.OFF -> {
-                    // Blank retro screen
+                    // Blank sleek display
                 }
             }
         }

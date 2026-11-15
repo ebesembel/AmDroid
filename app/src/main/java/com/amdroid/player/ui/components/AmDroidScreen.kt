@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.amdroid.player.audio.VisualizerMode
 import com.amdroid.player.service.AudioPlaybackService
-import com.amdroid.player.ui.theme.WinampMetalDark
+import com.amdroid.player.ui.theme.AmDroidMetalDark
 
 @Composable
 fun AmDroidScreen(
@@ -32,6 +32,7 @@ fun AmDroidScreen(
     var panBalance by remember { mutableFloatStateOf(0.0f) }
 
     var visualizerMode by remember { mutableStateOf(VisualizerMode.SPECTRUM) }
+    var currentSortMode by remember { mutableStateOf(PlaylistSortMode.DEFAULT) }
 
     // Equalizer state triggers
     var eqEnabled by remember { mutableStateOf(service.equalizerManager.isEnabled) }
@@ -40,10 +41,25 @@ fun AmDroidScreen(
 
     val currentTrack = if (currentIdx in playlist.indices) playlist[currentIdx] else null
 
+    // Sorted playlist based on currentSortMode
+    val displayedTracks = remember(playlist, currentSortMode) {
+        when (currentSortMode) {
+            PlaylistSortMode.FOLDER -> playlist.sortedWith(
+                compareBy<com.amdroid.player.model.Track> { it.folderName.lowercase() }
+                    .thenBy { it.title.lowercase() }
+            )
+            PlaylistSortMode.ALBUM -> playlist.sortedWith(
+                compareBy<com.amdroid.player.model.Track> { it.album.lowercase() }
+                    .thenBy { it.title.lowercase() }
+            )
+            PlaylistSortMode.DEFAULT -> playlist
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(WinampMetalDark)
+            .background(AmDroidMetalDark)
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(8.dp)
@@ -54,7 +70,7 @@ fun AmDroidScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // 1. Classic Main Player Window
+            // 1. Classic Main Player Window (Sleek Studio Redesign)
             MainWindow(
                 currentTrack = currentTrack,
                 isPlaying = isPlaying,
@@ -133,12 +149,50 @@ fun AmDroidScreen(
                 }
             }
 
-            // 3. Playlist Window (Toggleable)
+            // 3. Playlist Window (Toggleable with Sorting Modes)
             if (showPlaylist) {
+                // Find index of currently playing song in displayed list
+                val displayedCurrentIdx = if (currentTrack != null) {
+                    displayedTracks.indexOfFirst { it.id == currentTrack.id }
+                } else -1
+
                 PlaylistWindow(
-                    tracks = playlist,
-                    currentTrackIndex = currentIdx,
-                    onTrackSelected = { idx -> service.playTrack(idx) },
+                    tracks = displayedTracks,
+                    currentTrackIndex = displayedCurrentIdx,
+                    currentSortMode = currentSortMode,
+                    onSortModeChanged = { mode ->
+                        currentSortMode = mode
+                        if (mode != PlaylistSortMode.DEFAULT) {
+                            val newSorted = when (mode) {
+                                PlaylistSortMode.FOLDER -> playlist.sortedWith(
+                                    compareBy<com.amdroid.player.model.Track> { it.folderName.lowercase() }
+                                        .thenBy { it.title.lowercase() }
+                                )
+                                PlaylistSortMode.ALBUM -> playlist.sortedWith(
+                                    compareBy<com.amdroid.player.model.Track> { it.album.lowercase() }
+                                        .thenBy { it.title.lowercase() }
+                                )
+                                else -> playlist
+                            }
+                            service.setPlaylist(newSorted, startIdx = if (currentTrack != null) newSorted.indexOfFirst { it.id == currentTrack.id }.coerceAtLeast(0) else 0)
+                        }
+                    },
+                    onShuffleOrder = {
+                        val shuffled = playlist.shuffled()
+                        val newIdx = if (currentTrack != null) shuffled.indexOfFirst { it.id == currentTrack.id }.coerceAtLeast(0) else 0
+                        service.setPlaylist(shuffled, startIdx = newIdx)
+                    },
+                    onTrackSelected = { selectedIdx ->
+                        if (selectedIdx in displayedTracks.indices) {
+                            val targetTrack = displayedTracks[selectedIdx]
+                            val originalIdx = playlist.indexOfFirst { it.id == targetTrack.id }
+                            if (originalIdx >= 0) {
+                                service.playTrack(originalIdx)
+                            } else {
+                                service.playTrack(selectedIdx)
+                            }
+                        }
+                    },
                     onAddAudioClick = onOpenAudioPicker,
                     onClearPlaylist = { service.setPlaylist(emptyList()) }
                 )

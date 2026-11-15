@@ -23,25 +23,24 @@ fun RetroButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
-    width: Dp = 36.dp,
-    height: Dp = 26.dp
+    width: Dp = 38.dp,
+    height: Dp = 28.dp
 ) {
-    val bg = if (isActive) WinampBorderHighlight else WinampButtonFace
-    val borderCol = if (isActive) WinampLcdGreen else WinampBorderHighlight
+    val bg = if (isActive) AmDroidBlueDeep else AmDroidButtonFace
+    val borderCol = if (isActive) AmDroidCyanBright else AmDroidBorderHighlight
 
     Box(
         modifier = modifier
             .width(width)
             .height(height)
-            .background(bg, RoundedCornerShape(2.dp))
-            .border(1.dp, borderCol)
-            .border(2.dp, WinampBorderShadow)
+            .background(bg, RoundedCornerShape(3.dp))
+            .border(1.dp, borderCol, RoundedCornerShape(3.dp))
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            color = if (isActive) WinampLcdGreen else Color.White,
+            color = if (isActive) Color.White else Color(0xFFE2E8F0),
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold
@@ -56,17 +55,21 @@ fun RetroToggleBadge(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val bg = if (isActive) AmDroidBlueElectric else AmDroidMetalDark
+    val borderCol = if (isActive) AmDroidCyanGlow else Color(0xFF1E293B)
+    val textCol = if (isActive) Color.White else AmDroidTextMuted
+
     Box(
         modifier = modifier
-            .background(if (isActive) WinampLcdDimGreen else WinampMetalDark, RoundedCornerShape(2.dp))
-            .border(1.dp, if (isActive) WinampLcdGreen else WinampBorderShadow)
+            .background(bg, RoundedCornerShape(3.dp))
+            .border(1.dp, borderCol, RoundedCornerShape(3.dp))
             .clickable { onToggle() }
             .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label.uppercase(),
-            color = if (isActive) WinampLcdGreen else WinampLcdDimGreen,
+            color = textCol,
             fontSize = 9.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold

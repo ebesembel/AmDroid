@@ -3,11 +3,29 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Iconic Winamp Lightning Bolt in Gold/Orange -->
+    
+    <!-- Thin Electric Blue / Cyan Lightning Bolt -->
+    <!-- Coords scaled from preview: M63 18 L50 56 L61 56 L55 98 L74 50 L61 50 Z scaled to 108dp -->
     <path
-        android:fillColor="#FFAA00"
-        android:pathData="M58,24 L34,56 L52,56 L46,84 L74,48 L56,48 Z" />
+        android:fillColor="#38BDF8"
+        android:strokeColor="#0284C7"
+        android:strokeWidth="1.2"
+        android:pathData="M56.7,16.2 L45,50.4 L54.9,50.4 L49.5,88.2 L66.6,45 L54.9,45 Z" />
+
+    <!-- Letter E on the Left (Bold White/Silver) -->
+    <!-- Clean geometry path for 'E' -->
     <path
-        android:fillColor="#00FF00"
-        android:pathData="M30,88 L78,88 L78,92 L30,92 Z" />
+        android:fillColor="#F8FAFC"
+        android:pathData="M23,38 H38 V44 H29 V50 H36 V56 H29 V62 H38 V68 H23 Z" />
+
+    <!-- Letter B on the Right (Bold White/Silver) -->
+    <!-- Clean geometry path for 'B' -->
+    <path
+        android:fillColor="#F8FAFC"
+        android:pathData="M70,38 H81 C84,38 86,40 86,43 C86,45.5 84.5,47.5 82.5,48.5 C85,49.5 87,51.5 87,54.5 C87,57.5 84.5,60 81,60 H70 Z M76,43 V48 H80 C81.5,48 82.5,47.2 82.5,45.5 C82.5,43.8 81.5,43 80,43 Z M76,53 V58 H81 C82.5,58 83.5,57.2 83.5,55.5 C83.5,53.8 82.5,53 81,53 Z" />
+
+    <!-- Bottom Cyan Accent Bar -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M27,94 H81 V97 H27 Z" />
 </vector>

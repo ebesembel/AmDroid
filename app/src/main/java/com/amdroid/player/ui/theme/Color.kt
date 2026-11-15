@@ -2,25 +2,60 @@ package com.amdroid.player.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val WinampMetalLight = Color(0xFF4A4C50)
-val WinampMetalMid = Color(0xFF2E3033)
-val WinampMetalDark = Color(0xFF1B1C1E)
-val WinampBorderHighlight = Color(0xFF5E6166)
-val WinampBorderShadow = Color(0xFF101012)
+// Modern Professional Studio Metal (Deep Slate / Obsidian)
+val AmDroidMetalDark = Color(0xFF0B0E14)
+val AmDroidMetalMid = Color(0xFF151922)
+val AmDroidMetalLight = Color(0xFF222938)
+val AmDroidBorderHighlight = Color(0xFF2D3748)
+val AmDroidBorderShadow = Color(0xFF06080B)
 
-val WinampLcdBackground = Color(0xFF001200)
-val WinampLcdGreen = Color(0xFF00FF00)
-val WinampLcdDimGreen = Color(0xFF003800)
-val WinampLcdOrange = Color(0xFFFF9900)
-val WinampLcdRed = Color(0xFFFF2222)
+// Electric Cyan & Blue Palette (Matching the new Logo)
+val AmDroidCyanBright = Color(0xFF00F0FF)
+val AmDroidCyanGlow = Color(0xFF38BDF8)
+val AmDroidCyanDim = Color(0xFF075985)
+val AmDroidBlueElectric = Color(0xFF0284C7)
+val AmDroidBlueDeep = Color(0xFF0369A1)
 
-val WinampButtonFace = Color(0xFF383A3D)
-val WinampButtonHighlight = Color(0xFF525559)
-val WinampButtonShadow = Color(0xFF1F2022)
+// High-Tech LCD Display
+val AmDroidLcdBg = Color(0xFF05080E)
+val AmDroidLcdCyan = Color(0xFF38BDF8)
+val AmDroidLcdDimCyan = Color(0xFF0E4A6F)
+val AmDroidLcdWhite = Color(0xFFF8FAFC)
+val AmDroidLcdOrange = Color(0xFFFB923C)
 
-val WinampEqThumb = Color(0xFFC0C2C5)
-val WinampEqSlot = Color(0xFF111214)
+// Button & Sliders
+val AmDroidButtonFace = Color(0xFF1E2430)
+val AmDroidButtonHighlight = Color(0xFF2F384A)
+val AmDroidButtonShadow = Color(0xFF0D1117)
+val AmDroidSliderThumb = Color(0xFFCBD5E1)
+val AmDroidSliderSlot = Color(0xFF080B10)
 
-val WinampPlaylistBg = Color(0xFF000000)
-val WinampPlaylistSelected = Color(0xFF0000A0)
-val WinampPlaylistText = Color(0xFF00FF00)
+// Playlist Colors
+val AmDroidPlaylistBg = Color(0xFF07090F)
+val AmDroidPlaylistSelected = Color(0xFF0284C7)
+val AmDroidPlaylistText = Color(0xFFE2E8F0)
+val AmDroidPlaylistTextMuted = Color(0xFF64748B)
+
+// Backwards compatibility mappings for smooth migration
+val WinampMetalLight = AmDroidMetalLight
+val WinampMetalMid = AmDroidMetalMid
+val WinampMetalDark = AmDroidMetalDark
+val WinampBorderHighlight = AmDroidBorderHighlight
+val WinampBorderShadow = AmDroidBorderShadow
+
+val WinampLcdBackground = AmDroidLcdBg
+val WinampLcdGreen = AmDroidCyanGlow
+val WinampLcdDimGreen = AmDroidLcdDimCyan
+val WinampLcdOrange = AmDroidLcdOrange
+val WinampLcdRed = Color(0xFFEF4444)
+
+val WinampButtonFace = AmDroidButtonFace
+val WinampButtonHighlight = AmDroidButtonHighlight
+val WinampButtonShadow = AmDroidButtonShadow
+
+val WinampEqThumb = AmDroidSliderThumb
+val WinampEqSlot = AmDroidSliderSlot
+
+val WinampPlaylistBg = AmDroidPlaylistBg
+val WinampPlaylistSelected = AmDroidPlaylistSelected
+val WinampPlaylistText = AmDroidCyanGlow

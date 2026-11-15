@@ -1,6 +1,7 @@
 package com.amdroid.player.model
 
 import android.net.Uri
+import java.io.File
 
 data class Track(
     val id: Long,
@@ -13,6 +14,16 @@ data class Track(
     val bitrateKbps: Int = 320,
     val sampleRateKhz: Int = 44
 ) {
+    val folderName: String
+        get() {
+            if (path.isNullOrBlank()) return "Música Principal"
+            return try {
+                File(path).parentFile?.name ?: "Música"
+            } catch (e: Exception) {
+                "Música"
+            }
+        }
+
     val formattedDuration: String
         get() {
             val totalSeconds = durationMs / 1000

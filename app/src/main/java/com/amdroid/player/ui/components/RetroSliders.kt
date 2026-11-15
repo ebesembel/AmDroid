@@ -2,15 +2,17 @@ package com.amdroid.player.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -45,8 +47,8 @@ fun RetroHorizontalSlider(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(14.dp)
-                .background(WinampEqSlot, RoundedCornerShape(1.dp))
+                .height(18.dp)
+                .background(WinampEqSlot, RoundedCornerShape(2.dp))
                 .border(1.dp, WinampBorderShadow)
                 .onSizeChanged { size = it }
                 .pointerInput(Unit) {
@@ -57,44 +59,45 @@ fun RetroHorizontalSlider(
                         }
                     }
                 }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, _ ->
-                        change.consume()
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    state = rememberDraggableState { deltaPx ->
                         if (size.width > 0) {
-                            val newVal = (change.position.x / size.width).coerceIn(0f, 1f)
+                            val deltaFraction = deltaPx / size.width
+                            val newVal = (value + deltaFraction).coerceIn(0f, 1f)
                             onValueChange(newVal)
                         }
                     }
-                }
+                )
         ) {
             // Track center groove
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(2.dp)
+                    .height(3.dp)
                     .align(Alignment.Center)
                     .background(Color.Black)
             )
 
-            // Metallic Thumb
+            // Metallic Thumb (Enlarged for touch comfort)
             if (size.width > 0) {
-                val thumbWidth = 24.dp
+                val thumbWidth = 26.dp
                 val thumbOffset = ((size.width - thumbWidth.value * 2) * value).coerceAtLeast(0f)
 
                 Box(
                     modifier = Modifier
                         .width(thumbWidth)
-                        .height(12.dp)
+                        .height(16.dp)
                         .offset(x = thumbOffset.dp)
                         .align(Alignment.CenterStart)
-                        .background(WinampEqThumb, RoundedCornerShape(1.dp))
+                        .background(WinampEqThumb, RoundedCornerShape(2.dp))
                         .border(1.dp, WinampBorderHighlight)
                 ) {
                     // Bevel grip line
                     Box(
                         modifier = Modifier
                             .width(2.dp)
-                            .height(8.dp)
+                            .height(10.dp)
                             .align(Alignment.Center)
                             .background(WinampMetalDark)
                     )
@@ -106,56 +109,86 @@ fun RetroHorizontalSlider(
 
 @Composable
 fun RetroVerticalSlider(
-    valueDb: Float, // -12.0f to +12.0f
+    valueDb: Float, // -15.0f to +15.0f
     onValueChange: (Float) -> Unit,
     frequencyLabel: String,
+    onStepUp: () -> Unit,
+    onStepDown: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var heightPx by remember { mutableStateOf(0) }
+    var heightPx by remember { mutableIntStateOf(0) }
+    val maxDb = 15.0f
 
     Column(
-        modifier = modifier,
+        modifier = modifier
+            .width(42.dp)
+            .padding(horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Frequency label at top
         Text(
             text = frequencyLabel,
             color = WinampLcdGreen,
-            fontSize = 8.sp,
+            fontSize = 9.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(2.dp))
 
-        // Vertical track
+        // Step UP button (+1 dB) for precision tapping
         Box(
             modifier = Modifier
-                .width(16.dp)
-                .height(90.dp)
-                .background(WinampEqSlot, RoundedCornerShape(1.dp))
+                .size(24.dp, 16.dp)
+                .background(WinampButtonFace, RoundedCornerShape(1.dp))
+                .border(1.dp, WinampBorderHighlight)
+                .clickable { onStepUp() },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "▲",
+                color = Color.White,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(3.dp))
+
+        // Vertical track with enlarged touch target
+        Box(
+            modifier = Modifier
+                .width(24.dp)
+                .height(105.dp)
+                .background(WinampEqSlot, RoundedCornerShape(2.dp))
                 .border(1.dp, WinampBorderShadow)
                 .onSizeChanged { heightPx = it.height }
                 .pointerInput(Unit) {
-                    detectTapGestures { offset ->
+                    detectTapGestures(
+                        onDoubleTap = {
+                            onValueChange(0f) // Double tap resets to 0dB
+                        },
+                        onTap = { offset ->
+                            if (heightPx > 0) {
+                                val fraction = (offset.y / heightPx).coerceIn(0f, 1f)
+                                val db = maxDb - (fraction * (maxDb * 2))
+                                onValueChange(db)
+                            }
+                        }
+                    )
+                }
+                .draggable(
+                    orientation = Orientation.Vertical,
+                    state = rememberDraggableState { deltaPx ->
                         if (heightPx > 0) {
-                            // top is +12dB, bottom is -12dB
-                            val fraction = (offset.y / heightPx).coerceIn(0f, 1f)
-                            val db = 12.0f - (fraction * 24.0f)
-                            onValueChange(db)
+                            // Dragging down increases Y (decreases dB)
+                            val deltaFraction = deltaPx / heightPx
+                            val deltaDb = -deltaFraction * (maxDb * 2)
+                            val newDb = (valueDb + deltaDb).coerceIn(-maxDb, maxDb)
+                            onValueChange(newDb)
                         }
                     }
-                }
-                .pointerInput(Unit) {
-                    detectDragGestures { change, _ ->
-                        change.consume()
-                        if (heightPx > 0) {
-                            val fraction = (change.position.y / heightPx).coerceIn(0f, 1f)
-                            val db = 12.0f - (fraction * 24.0f)
-                            onValueChange(db)
-                        }
-                    }
-                }
+                )
         ) {
             // Center 0dB mark line
             Box(
@@ -163,14 +196,13 @@ fun RetroVerticalSlider(
                     .fillMaxWidth()
                     .height(1.dp)
                     .align(Alignment.Center)
-                    .background(Color(0xFF444444))
+                    .background(Color(0xFF666666))
             )
 
-            // Metallic Fader Knob
+            // Metallic Fader Knob (wider for mobile thumbs)
             if (heightPx > 0) {
-                // fraction: 0.0 (+12dB) -> 1.0 (-12dB)
-                val fraction = ((12.0f - valueDb) / 24.0f).coerceIn(0f, 1f)
-                val knobHeight = 12.dp
+                val fraction = ((maxDb - valueDb) / (maxDb * 2)).coerceIn(0f, 1f)
+                val knobHeight = 16.dp
                 val knobOffset = ((heightPx - knobHeight.value * 2) * fraction).coerceAtLeast(0f)
 
                 Box(
@@ -179,29 +211,49 @@ fun RetroVerticalSlider(
                         .height(knobHeight)
                         .offset(y = knobOffset.dp)
                         .align(Alignment.TopCenter)
-                        .background(WinampEqThumb, RoundedCornerShape(1.dp))
+                        .background(WinampEqThumb, RoundedCornerShape(2.dp))
                         .border(1.dp, WinampBorderHighlight)
                 ) {
                     // Center grip groove on knob
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
-                            .height(1.dp)
+                            .height(2.dp)
                             .align(Alignment.Center)
-                            .background(WinampBorderShadow)
+                            .background(WinampMetalDark)
                     )
                 }
             }
+        }
+
+        Spacer(modifier = Modifier.height(3.dp))
+
+        // Step DOWN button (-1 dB) for precision tapping
+        Box(
+            modifier = Modifier
+                .size(24.dp, 16.dp)
+                .background(WinampButtonFace, RoundedCornerShape(1.dp))
+                .border(1.dp, WinampBorderHighlight)
+                .clickable { onStepDown() },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "▼",
+                color = Color.White,
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Spacer(modifier = Modifier.height(2.dp))
 
         // Current dB value
         Text(
-            text = String.format("%+.0f", valueDb),
-            color = WinampLcdDimGreen,
-            fontSize = 7.sp,
-            fontFamily = FontFamily.Monospace
+            text = String.format("%+.1f", valueDb),
+            color = if (valueDb > 0) WinampLcdGreen else if (valueDb < 0) WinampLcdOrange else Color.Gray,
+            fontSize = 8.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold
         )
     }
 }

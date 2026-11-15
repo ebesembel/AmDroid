@@ -4,7 +4,7 @@ import android.media.audiofx.Equalizer
 
 data class EqPreset(
     val name: String,
-    val bandGains: List<Float> // -12.0f to +12.0f dB for 10 bands
+    val bandGains: List<Float> // -15.0f to +15.0f dB for 10 bands
 )
 
 class EqualizerManager {
@@ -13,11 +13,22 @@ class EqualizerManager {
     var isEnabled: Boolean = true
         private set
 
-    var preampGainDb: Float = 0.0f
+    var preampGainDb: Float = 2.0f // Slight preamp punch
         private set
 
-    // 10 virtual Winamp bands in dB (-12f to +12f)
-    val bandLevels = FloatArray(10) { 0f }
+    // Default V-Shape Curve: Punchy Bass & Crisp Treble
+    val bandLevels = floatArrayOf(
+        6.5f,  // 60Hz: Sub-bass profundo
+        5.0f,  // 170Hz: Golpe de bajo
+        2.5f,  // 310Hz: Bajos medios
+        0.0f,  // 600Hz: Medios bajos
+        -0.5f, // 1kHz: Medios
+        0.5f,  // 3kHz: Medios altos
+        3.0f,  // 6kHz: Presencia de agudos
+        5.5f,  // 12kHz: Brillo
+        7.0f,  // 14kHz: Nitidez
+        7.5f   // 16kHz: Aire y agudos cristalinos
+    )
 
     val classicFrequencies = listOf(
         "60Hz", "170Hz", "310Hz", "600Hz", "1kHz",
@@ -25,15 +36,42 @@ class EqualizerManager {
     )
 
     val presets = listOf(
-        EqPreset("Flat", List(10) { 0f }),
-        EqPreset("Rock", listOf(4.5f, 3.0f, -1.5f, -2.5f, -0.5f, 2.5f, 4.0f, 5.5f, 6.0f, 6.0f)),
-        EqPreset("Full Bass", listOf(7.0f, 6.5f, 5.0f, 2.0f, -1.0f, -3.0f, -4.0f, -5.0f, -5.5f, -6.0f)),
-        EqPreset("Pop", listOf(-1.5f, 1.0f, 3.5f, 4.0f, 3.0f, -1.0f, -2.0f, -2.0f, -1.5f, -1.5f)),
-        EqPreset("Techno", listOf(5.0f, 4.0f, 2.0f, 0.0f, -2.0f, 2.0f, 4.5f, 5.0f, 5.5f, 5.0f)),
-        EqPreset("Classical", listOf(4.0f, 3.0f, 2.5f, 2.0f, -1.5f, -1.5f, 0.0f, 2.0f, 3.0f, 3.5f)),
-        EqPreset("Reggae", listOf(0.0f, 0.0f, -0.5f, -4.0f, 0.0f, 4.5f, 4.5f, 2.5f, 0.0f, 0.0f)),
-        EqPreset("Ska", listOf(-2.0f, -3.5f, -3.0f, -1.0f, 2.0f, 4.0f, 6.0f, 6.5f, 7.0f, 6.0f)),
-        EqPreset("Party", listOf(5.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 5.0f, 5.0f))
+        EqPreset(
+            "Bajos & Agudos Pro (Recomendado)",
+            listOf(6.5f, 5.0f, 2.5f, 0.0f, -0.5f, 0.5f, 3.0f, 5.5f, 7.0f, 7.5f)
+        ),
+        EqPreset(
+            "Bajos Pesados (Bass Boost Extremo)",
+            listOf(9.0f, 8.0f, 6.0f, 3.0f, 0.0f, -1.0f, -2.0f, 0.0f, 2.0f, 3.0f)
+        ),
+        EqPreset(
+            "Agudos Cristalinos (Treble Boost)",
+            listOf(0.0f, 0.0f, 0.0f, 0.5f, 1.5f, 3.5f, 5.5f, 7.5f, 8.5f, 9.0f)
+        ),
+        EqPreset(
+            "Rock & Metal Intenso",
+            listOf(6.0f, 4.5f, -1.0f, -2.0f, -0.5f, 2.5f, 4.5f, 6.0f, 7.0f, 7.0f)
+        ),
+        EqPreset(
+            "Reggaeton / Urbano / Dembow",
+            listOf(8.0f, 7.0f, 4.0f, 1.0f, 0.0f, 2.0f, 3.5f, 5.0f, 6.5f, 6.0f)
+        ),
+        EqPreset(
+            "Salsa / Caribe / Tropical",
+            listOf(5.0f, 3.5f, 1.0f, 0.0f, 1.5f, 3.0f, 4.5f, 5.5f, 6.0f, 6.0f)
+        ),
+        EqPreset(
+            "Pop Nítido & Voces",
+            listOf(2.0f, 3.0f, 4.0f, 4.5f, 3.0f, 1.0f, 2.0f, 4.0f, 5.0f, 5.5f)
+        ),
+        EqPreset(
+            "Electrónica / Club / Techno",
+            listOf(7.5f, 6.0f, 2.5f, 0.0f, -1.5f, 2.0f, 4.5f, 6.0f, 7.0f, 7.0f)
+        ),
+        EqPreset(
+            "Plano (Original Sin Efecto)",
+            listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+        )
     )
 
     fun attachToAudioSession(audioSessionId: Int) {
@@ -58,15 +96,25 @@ class EqualizerManager {
     }
 
     fun setPreamp(db: Float) {
-        preampGainDb = db.coerceIn(-12.0f, 12.0f)
+        preampGainDb = db.coerceIn(-15.0f, 15.0f)
         applyAllBands()
     }
 
     fun setBandLevel(bandIndex: Int, levelDb: Float) {
         if (bandIndex in bandLevels.indices) {
-            bandLevels[bandIndex] = levelDb.coerceIn(-12.0f, 12.0f)
+            bandLevels[bandIndex] = levelDb.coerceIn(-15.0f, 15.0f)
             applyBand(bandIndex)
         }
+    }
+
+    fun adjustBand(bandIndex: Int, deltaDb: Float) {
+        if (bandIndex in bandLevels.indices) {
+            setBandLevel(bandIndex, bandLevels[bandIndex] + deltaDb)
+        }
+    }
+
+    fun adjustPreamp(deltaDb: Float) {
+        setPreamp(preampGainDb + deltaDb)
     }
 
     fun applyPreset(preset: EqPreset) {
@@ -85,10 +133,9 @@ class EqualizerManager {
         val maxRange = eq.bandLevelRange[1] // in mB (e.g. +1500)
 
         for (hBand in 0 until numHardwareBands) {
-            // Map hardware band frequency to closest virtual band
             val centerFreq = eq.getCenterFreq(hBand.toShort()) / 1000 // Hz
             val virtualIndex = mapFreqToVirtualIndex(centerFreq)
-            val desiredDb = (bandLevels[virtualIndex] + preampGainDb).coerceIn(-12f, 12f)
+            val desiredDb = (bandLevels[virtualIndex] + preampGainDb).coerceIn(-15f, 15f)
             val millibels = (desiredDb * 100).toInt().coerceIn(minRange.toInt(), maxRange.toInt()).toShort()
             try {
                 eq.setBandLevel(hBand.toShort(), millibels)
@@ -118,6 +165,7 @@ class EqualizerManager {
 
     fun release() {
         try {
+            equalizer?.setEnabled(false)
             equalizer?.release()
         } catch (e: Exception) {
             e.printStackTrace()

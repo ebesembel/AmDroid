@@ -39,12 +39,12 @@ fun MainWindow(
     modifier: Modifier = Modifier
 ) {
     RetroWindowBox(
-        title = "AmDroid v1.0 - Main Window",
+        title = "AmDroid v1.1 - Ventana Principal",
         modifier = modifier
     ) {
-        // 1. Retro LCD Panel
+        // 1. Pantalla LCD Retro
         RetroLcdDisplay(
-            trackTitle = currentTrack?.let { "${it.artist} - ${it.title}" } ?: "AmDroid - Ready to Rock",
+            trackTitle = currentTrack?.let { "${it.artist} - ${it.title}" } ?: "AmDroid - Listo para sonar",
             currentPosMs = currentPosMs,
             totalDurationMs = currentTrack?.durationMs ?: 0L,
             isPlaying = isPlaying,
@@ -54,7 +54,7 @@ fun MainWindow(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // 2. Real-time Spectrum Analyzer & Oscilloscope
+        // 2. Analizador de Espectro y Osciloscopio en tiempo real
         SpectrumVisualizerView(
             mode = visualizerMode,
             bars = bars,
@@ -65,7 +65,7 @@ fun MainWindow(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // 3. Song Progress Seeker
+        // 3. Deslizador de Posición del Tema
         val progressFraction = if ((currentTrack?.durationMs ?: 0L) > 0) {
             (currentPosMs.toFloat() / currentTrack!!.durationMs).coerceIn(0f, 1f)
         } else 0f
@@ -73,24 +73,24 @@ fun MainWindow(
         RetroHorizontalSlider(
             value = progressFraction,
             onValueChange = onSeek,
-            label = "SEEK"
+            label = "POSICIÓN DEL TEMA"
         )
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // 4. Volume and Balance Sliders
+        // 4. Deslizadores de Volumen y Balance
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             RetroHorizontalSlider(
                 value = volume,
                 onValueChange = onVolumeChange,
-                label = "VOLUME",
+                label = "VOLUMEN",
                 modifier = Modifier.weight(1f)
             )
 
-            // Balance: convert -1..+1 to 0..1 for the slider
+            // Balance: convertir -1..+1 a 0..1
             val balFraction = (balance + 1.0f) / 2.0f
             RetroHorizontalSlider(
                 value = balFraction,
@@ -98,34 +98,34 @@ fun MainWindow(
                     val pan = frac * 2.0f - 1.0f
                     onBalanceChange(pan)
                 },
-                label = "BALANCE (L-R)",
+                label = "BALANCE (I-D)",
                 modifier = Modifier.weight(1f)
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 5. Classic Playback Controls Bar
+        // 5. Botonera Clásica de Reproducción y Modos
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Main playback keys
+            // Controles de transporte
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                RetroButton(text = "|<<", onClick = onPrev)
-                RetroButton(text = if (isPlaying) "||" else ">", onClick = onPlayPause, isActive = isPlaying)
-                RetroButton(text = "■", onClick = onStop)
-                RetroButton(text = ">>|", onClick = onNext)
-                RetroButton(text = "⏏", onClick = onOpenAudioPicker)
+                RetroButton(text = "|<<", onClick = onPrev, width = 38.dp, height = 30.dp)
+                RetroButton(text = if (isPlaying) "||" else ">", onClick = onPlayPause, isActive = isPlaying, width = 42.dp, height = 30.dp)
+                RetroButton(text = "■", onClick = onStop, width = 36.dp, height = 30.dp)
+                RetroButton(text = ">>|", onClick = onNext, width = 38.dp, height = 30.dp)
+                RetroButton(text = "⏏", onClick = onOpenAudioPicker, width = 36.dp, height = 30.dp)
             }
 
-            // Window and mode toggles
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                RetroToggleBadge(label = "EQ", isActive = showEqualizer, onToggle = onToggleEqualizer)
-                RetroToggleBadge(label = "PL", isActive = showPlaylist, onToggle = onTogglePlaylist)
-                RetroToggleBadge(label = "SHUF", isActive = isShuffle, onToggle = onToggleShuffle)
-                RetroToggleBadge(label = "REP", isActive = isRepeat, onToggle = onToggleRepeat)
+            // Interruptores de Ventanas y Modos
+            Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                RetroToggleBadge(label = "ECUAL", isActive = showEqualizer, onToggle = onToggleEqualizer)
+                RetroToggleBadge(label = "LISTA", isActive = showPlaylist, onToggle = onTogglePlaylist)
+                RetroToggleBadge(label = "ALEAT", isActive = isShuffle, onToggle = onToggleShuffle)
+                RetroToggleBadge(label = "REPET", isActive = isRepeat, onToggle = onToggleRepeat)
             }
         }
     }

@@ -36,7 +36,7 @@ fun RetroLcdDisplay(
         if (isPlaying && trackTitle.length > 20) {
             scrollOffset.snapTo(0f)
             scrollOffset.animateTo(
-                targetValue = -300f,
+                targetValue = -350f,
                 animationSpec = infiniteRepeatable(
                     animation = tween(durationMillis = 8000, easing = LinearEasing),
                     repeatMode = RepeatMode.Restart
@@ -63,10 +63,10 @@ fun RetroLcdDisplay(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(68.dp)
+            .height(72.dp)
             .background(WinampLcdBackground, RoundedCornerShape(2.dp))
             .border(1.dp, WinampBorderShadow)
-            .padding(horizontal = 6.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 5.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
 
@@ -84,16 +84,16 @@ fun RetroLcdDisplay(
                     Text(
                         text = displayTime,
                         color = WinampLcdGreen,
-                        fontSize = 24.sp,
+                        fontSize = 26.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 2.sp
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (showRemainingTime) "REM" else "ELAP",
+                        text = if (showRemainingTime) "REST" else "TRAN",
                         color = WinampLcdDimGreen,
-                        fontSize = 8.sp,
+                        fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )
@@ -105,14 +105,14 @@ fun RetroLcdDisplay(
                         Text(
                             text = "$bitrateKbps",
                             color = WinampLcdGreen,
-                            fontSize = 10.sp,
+                            fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = " kbps",
                             color = WinampLcdDimGreen,
-                            fontSize = 8.sp,
+                            fontSize = 9.sp,
                             fontFamily = FontFamily.Monospace
                         )
                     }
@@ -120,21 +120,21 @@ fun RetroLcdDisplay(
                         Text(
                             text = "$sampleRateKhz",
                             color = WinampLcdGreen,
-                            fontSize = 10.sp,
+                            fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = " kHz",
                             color = WinampLcdDimGreen,
-                            fontSize = 8.sp,
+                            fontSize = 9.sp,
                             fontFamily = FontFamily.Monospace
                         )
                     }
                 }
             }
 
-            // Bottom Row: Scrolling Track Name & STEREO badge
+            // Bottom Row: Scrolling Track Name & ESTÉREO badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -146,9 +146,9 @@ fun RetroLcdDisplay(
                         .clipToBounds()
                 ) {
                     Text(
-                        text = if (trackTitle.isBlank()) "AmDroid - Ready to Play" else trackTitle,
+                        text = if (trackTitle.isBlank()) "AmDroid - Listo para sonar" else trackTitle,
                         color = WinampLcdGreen,
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -158,7 +158,7 @@ fun RetroLcdDisplay(
 
                 Spacer(modifier = Modifier.width(6.dp))
 
-                // Stereo / Mono Badge
+                // Estéreo / Mono Badge
                 Row {
                     Text(
                         text = "MONO",
@@ -169,7 +169,7 @@ fun RetroLcdDisplay(
                     )
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
-                        text = "STEREO",
+                        text = "ESTÉREO",
                         color = if (isPlaying) WinampLcdOrange else WinampLcdDimGreen,
                         fontSize = 8.sp,
                         fontFamily = FontFamily.Monospace,

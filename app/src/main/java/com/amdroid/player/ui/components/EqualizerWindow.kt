@@ -3,9 +3,11 @@ package com.amdroid.player.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -36,7 +38,7 @@ fun EqualizerWindow(
     var showPresetsDialog by remember { mutableStateOf(false) }
 
     RetroWindowBox(
-        title = "AmDroid - Equalizer",
+        title = "AmDroid - Ecualizador Gráfico",
         modifier = modifier
     ) {
         // Top Toolbar
@@ -49,54 +51,57 @@ fun EqualizerWindow(
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 RetroToggleBadge(
-                    label = if (isEqEnabled) "ON" else "OFF",
+                    label = if (isEqEnabled) "ENC" else "APA",
                     isActive = isEqEnabled,
                     onToggle = { onToggleEq(!isEqEnabled) }
                 )
 
                 RetroButton(
-                    text = "PRESETS",
+                    text = "PREAJUSTES",
                     onClick = { showPresetsDialog = true },
-                    width = 70.dp,
-                    height = 24.dp
+                    width = 90.dp,
+                    height = 26.dp
                 )
             }
 
             RetroButton(
-                text = "FLAT",
+                text = "REINICIAR",
                 onClick = {
                     onPreampChange(0f)
                     for (i in 0 until 10) onBandChange(i, 0f)
                 },
-                width = 50.dp,
-                height = 24.dp
+                width = 80.dp,
+                height = 26.dp
             )
         }
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Sliders Row: PREAMP + 10 BANDS
+        // Horizontally scrollable row containing PREAMP + 10 BANDS with comfortable touch width
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(WinampMetalDark, RoundedCornerShape(2.dp))
                 .border(1.dp, WinampBorderShadow)
-                .padding(vertical = 6.dp, horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .padding(vertical = 6.dp, horizontal = 4.dp)
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Preamp Slider
             RetroVerticalSlider(
                 valueDb = preampDb,
                 onValueChange = onPreampChange,
-                frequencyLabel = "PRE"
+                frequencyLabel = "PREAMP",
+                onStepUp = { eqManager.adjustPreamp(1.0f); onPreampChange(eqManager.preampGainDb) },
+                onStepDown = { eqManager.adjustPreamp(-1.0f); onPreampChange(eqManager.preampGainDb) }
             )
 
-            // Vertical divider
+            // Vertical divider between Preamp and 10 bands
             Box(
                 modifier = Modifier
-                    .width(1.dp)
-                    .height(90.dp)
+                    .width(2.dp)
+                    .height(130.dp)
                     .background(WinampBorderHighlight)
             )
 
@@ -107,7 +112,9 @@ fun EqualizerWindow(
                 RetroVerticalSlider(
                     valueDb = db,
                     onValueChange = { newDb -> onBandChange(i, newDb) },
-                    frequencyLabel = labels.getOrElse(i) { "$i" }
+                    frequencyLabel = labels.getOrElse(i) { "$i" },
+                    onStepUp = { eqManager.adjustBand(i, 1.0f); onBandChange(i, eqManager.bandLevels[i]) },
+                    onStepDown = { eqManager.adjustBand(i, -1.0f); onBandChange(i, eqManager.bandLevels[i]) }
                 )
             }
         }
@@ -117,22 +124,38 @@ fun EqualizerWindow(
         Dialog(onDismissRequest = { showPresetsDialog = false }) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.9f)
+                    .fillMaxWidth(0.95f)
                     .background(WinampMetalMid, RoundedCornerShape(4.dp))
                     .border(2.dp, WinampBorderHighlight)
-                    .padding(12.dp)
+                    .padding(14.dp)
             ) {
                 Column {
-                    Text(
-                        text = "SELECT EQUALIZER PRESET",
-                        color = WinampLcdGreen,
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "PREAJUSTES DE SONIDO",
+                            color = WinampLcdGreen,
+                            fontSize = 13.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                    LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
+                        Text(
+                            text = "✕",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            modifier = Modifier
+                                .clickable { showPresetsDialog = false }
+                                .padding(4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    LazyColumn(modifier = Modifier.heightIn(max = 350.dp)) {
                         items(eqManager.presets) { preset ->
                             Box(
                                 modifier = Modifier
@@ -141,15 +164,19 @@ fun EqualizerWindow(
                                         onApplyPreset(preset)
                                         showPresetsDialog = false
                                     }
-                                    .padding(vertical = 6.dp, horizontal = 4.dp)
+                                    .background(WinampMetalDark, RoundedCornerShape(2.dp))
+                                    .border(1.dp, WinampBorderShadow)
+                                    .padding(vertical = 10.dp, horizontal = 10.dp)
                             ) {
                                 Text(
                                     text = preset.name,
-                                    color = Color.White,
+                                    color = if (preset.name.contains("Bajos & Agudos")) WinampLcdGreen else Color.White,
                                     fontSize = 13.sp,
-                                    fontFamily = FontFamily.Monospace
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
+                            Spacer(modifier = Modifier.height(6.dp))
                         }
                     }
                 }

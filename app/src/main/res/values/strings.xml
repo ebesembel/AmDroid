@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">AmDroid</string>
-    <string name="channel_name">AmDroid Playback</string>
-    <string name="channel_description">Controls for AmDroid Retro Music Player</string>
+    <string name="channel_name">Reproducción AmDroid</string>
+    <string name="channel_description">Controles de reproducción estilo retro para AmDroid</string>
 </resources>

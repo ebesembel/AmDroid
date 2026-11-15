@@ -30,14 +30,14 @@ fun PlaylistWindow(
     modifier: Modifier = Modifier
 ) {
     RetroWindowBox(
-        title = "AmDroid - Playlist Editor",
+        title = "AmDroid - Lista de Reproducción",
         modifier = modifier
     ) {
-        // Track list display
+        // Ventana de canciones
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(210.dp)
                 .background(WinampPlaylistBg, RoundedCornerShape(2.dp))
                 .border(1.dp, WinampBorderShadow)
                 .padding(2.dp)
@@ -48,9 +48,9 @@ fun PlaylistWindow(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "[ PLAYLIST EMPTY - TAP '+ ADD' TO SCAN DEVICE ]",
+                        text = "[ LISTA VACÍA - TOCA '+ AGREGAR' PARA CARGAR MÚSICA ]",
                         color = WinampLcdDimGreen,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold
                     )
@@ -67,14 +67,14 @@ fun PlaylistWindow(
                                 .fillMaxWidth()
                                 .background(rowBg)
                                 .clickable { onTrackSelected(index) }
-                                .padding(horizontal = 4.dp, vertical = 2.dp),
+                                .padding(horizontal = 6.dp, vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "${index + 1}. ${track.artist} - ${track.title}",
                                 color = textColor,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 maxLines = 1,
@@ -87,7 +87,7 @@ fun PlaylistWindow(
                             Text(
                                 text = track.formattedDuration,
                                 color = if (isSelected) Color.White else WinampLcdDimGreen,
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontFamily = FontFamily.Monospace
                             )
                         }
@@ -98,35 +98,35 @@ fun PlaylistWindow(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Playlist bottom toolbar
+        // Barra inferior de la lista
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 RetroButton(
-                    text = "+ ADD",
+                    text = "+ AGREGAR",
                     onClick = onAddAudioClick,
-                    width = 60.dp,
-                    height = 24.dp
+                    width = 85.dp,
+                    height = 28.dp
                 )
                 RetroButton(
-                    text = "CLEAR",
+                    text = "LIMPIAR",
                     onClick = onClearPlaylist,
-                    width = 56.dp,
-                    height = 24.dp
+                    width = 75.dp,
+                    height = 28.dp
                 )
             }
 
-            // Playlist status summary
+            // Resumen de la lista
             val totalSec = tracks.sumOf { it.durationMs } / 1000
             val min = totalSec / 60
             val sec = totalSec % 60
             Text(
-                text = "${tracks.size} TRACKS [${String.format("%02d:%02d", min, sec)}]",
+                text = "${tracks.size} TEMAS [${String.format("%02d:%02d", min, sec)}]",
                 color = WinampLcdGreen,
-                fontSize = 9.sp,
+                fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold
             )

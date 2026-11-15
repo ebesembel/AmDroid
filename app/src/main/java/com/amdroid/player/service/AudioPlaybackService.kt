@@ -12,6 +12,7 @@ import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
 import com.amdroid.player.MainActivity
 import com.amdroid.player.R
@@ -31,6 +32,7 @@ class AudioPlaybackService : Service() {
 
     private val binder = LocalBinder()
     private var mediaPlayer: MediaPlayer? = null
+    private var mediaSession: MediaSessionCompat? = null
 
     val equalizerManager = EqualizerManager()
     val visualizerManager = VisualizerManager()
@@ -67,8 +69,25 @@ class AudioPlaybackService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        try {
+            mediaSession = MediaSessionCompat(this, "AmDroidSession").apply {
+                isActive = true
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         createNotificationChannel()
         startTicker()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_PREV -> previous()
+            ACTION_PLAY_PAUSE -> togglePlayPause()
+            ACTION_NEXT -> next()
+            ACTION_CLOSE -> stopAndExit()
+        }
+        return START_NOT_STICKY
     }
 
     private fun startTicker() {
@@ -152,7 +171,11 @@ class AudioPlaybackService : Service() {
     fun stop() {
         mediaPlayer?.let {
             it.stop()
-            it.prepare()
+            try {
+                it.prepare()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             it.seekTo(0)
             _isPlaying.value = false
             _currentPositionMs.value = 0L
@@ -201,7 +224,6 @@ class AudioPlaybackService : Service() {
     }
 
     private fun applyVolumeAndBalance() {
-        // Calculate left & right stereo volume based on pan
         val left = if (panBalance <= 0) masterVolume else masterVolume * (1.0f - panBalance)
         val right = if (panBalance >= 0) masterVolume else masterVolume * (1.0f + panBalance)
         try {
@@ -217,6 +239,20 @@ class AudioPlaybackService : Service() {
 
     fun toggleRepeat() {
         _isRepeat.value = !_isRepeat.value
+    }
+
+    fun stopAndExit() {
+        stop()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
+        val notifManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notifManager.cancel(NOTIFICATION_ID)
+        onExitRequested?.invoke()
+        stopSelf()
     }
 
     private fun handleTrackCompletion() {
@@ -251,13 +287,46 @@ class AudioPlaybackService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val prevIntent = PendingIntent.getService(
+            this, 1, Intent(this, AudioPlaybackService::class.java).apply { action = ACTION_PREV },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val playPauseIntent = PendingIntent.getService(
+            this, 2, Intent(this, AudioPlaybackService::class.java).apply { action = ACTION_PLAY_PAUSE },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val nextIntent = PendingIntent.getService(
+            this, 3, Intent(this, AudioPlaybackService::class.java).apply { action = ACTION_NEXT },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val closeIntent = PendingIntent.getService(
+            this, 4, Intent(this, AudioPlaybackService::class.java).apply { action = ACTION_CLOSE },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val playPauseIcon = if (_isPlaying.value) R.drawable.ic_notif_pause else R.drawable.ic_notif_play
+        val playPauseTitle = if (_isPlaying.value) "Pausa" else "Reproducir"
+
+        val mediaStyle = androidx.media.app.NotificationCompat.MediaStyle()
+            .setShowActionsInCompactView(0, 1, 2)
+        mediaSession?.let {
+            mediaStyle.setMediaSession(it.sessionToken)
+        }
+
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("AmDroid: ${track.title}")
-            .setContentText(track.artist)
+            .setContentTitle(track.title)
+            .setContentText("${track.artist} • AmDroid")
+            .setSubText("AmDroid")
             .setContentIntent(pendingIntent)
             .setOngoing(_isPlaying.value)
             .setSilent(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .addAction(R.drawable.ic_notif_prev, "Anterior", prevIntent)
+            .addAction(playPauseIcon, playPauseTitle, playPauseIntent)
+            .addAction(R.drawable.ic_notif_next, "Siguiente", nextIntent)
+            .addAction(R.drawable.ic_notif_close, "Cerrar", closeIntent)
+            .setStyle(mediaStyle)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
@@ -267,6 +336,8 @@ class AudioPlaybackService : Service() {
         progressJob?.cancel()
         equalizerManager.release()
         visualizerManager.release()
+        mediaSession?.release()
+        mediaSession = null
         mediaPlayer?.release()
         mediaPlayer = null
         super.onDestroy()
@@ -275,5 +346,12 @@ class AudioPlaybackService : Service() {
     companion object {
         const val CHANNEL_ID = "amdroid_playback_channel"
         const val NOTIFICATION_ID = 1997
+
+        const val ACTION_PREV = "com.amdroid.player.ACTION_PREV"
+        const val ACTION_PLAY_PAUSE = "com.amdroid.player.ACTION_PLAY_PAUSE"
+        const val ACTION_NEXT = "com.amdroid.player.ACTION_NEXT"
+        const val ACTION_CLOSE = "com.amdroid.player.ACTION_CLOSE"
+
+        var onExitRequested: (() -> Unit)? = null
     }
 }

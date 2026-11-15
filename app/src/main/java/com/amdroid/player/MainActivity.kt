@@ -53,6 +53,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         // Start & Bind playback service
+        AudioPlaybackService.onExitRequested = {
+            finishAffinity()
+        }
         val intent = Intent(this, AudioPlaybackService::class.java)
         startService(intent)
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)

@@ -36,6 +36,9 @@ val AmDroidPlaylistSelected = Color(0xFF0284C7)
 val AmDroidPlaylistText = Color(0xFFE2E8F0)
 val AmDroidPlaylistTextMuted = Color(0xFF64748B)
 
+val AmDroidTextMuted = Color(0xFF64748B)
+val AmDroidTextBright = Color(0xFFF8FAFC)
+
 // Backwards compatibility mappings for smooth migration
 val WinampMetalLight = AmDroidMetalLight
 val WinampMetalMid = AmDroidMetalMid
